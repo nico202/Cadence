@@ -39,10 +39,8 @@ PORT_MODE_OUTPUT = 2
 
 # Port Type
 PORT_TYPE_NULL       = 0
-PORT_TYPE_AUDIO_JACK = 1
-PORT_TYPE_MIDI_JACK  = 2
-PORT_TYPE_MIDI_A2J   = 3
-PORT_TYPE_MIDI_ALSA  = 4
+PORT_TYPE_EXCITATORY = 1
+PORT_TYPE_INIBITORY  = 2
 
 # Callback Action
 ACTION_GROUP_INFO       = 0 # group_id, N, N
@@ -53,6 +51,7 @@ ACTION_PORT_INFO        = 4 # port_id, N, N
 ACTION_PORT_RENAME      = 5 # port_id, N, new_name
 ACTION_PORTS_CONNECT    = 6 # out_id, in_id, N
 ACTION_PORTS_DISCONNECT = 7 # conn_id, N, N
+ACTION_NEURON_EDIT      = 8
 
 # Icon
 ICON_APPLICATION = 0
@@ -243,16 +242,10 @@ def port_mode2str(port_mode):
         return "PORT_MODE_???"
 
 def port_type2str(port_type):
-    if port_type == PORT_TYPE_NULL:
-        return "PORT_TYPE_NULL"
-    elif port_type == PORT_TYPE_AUDIO_JACK:
-        return "PORT_TYPE_AUDIO_JACK"
-    elif port_type == PORT_TYPE_MIDI_JACK:
-        return "PORT_TYPE_MIDI_JACK"
-    elif port_type == PORT_TYPE_MIDI_A2J:
-        return "PORT_TYPE_MIDI_A2J"
-    elif port_type == PORT_TYPE_MIDI_ALSA:
-        return "PORT_TYPE_MIDI_ALSA"
+    if port_type == PORT_TYPE_EXCITATORY:
+        return "PORT_TYPE_EXCITATORY"
+    elif port_type == PORT_TYPE_INIBITORY:
+        return "PORT_TYPE_AUDIO_INIBITORY"
     else:
         return "PORT_TYPE_???"
 
@@ -387,7 +380,7 @@ def setCanvasSize(x, y, width, height):
     canvas.size_rect.setWidth(width)
     canvas.size_rect.setHeight(height)
 
-def addGroup(group_id, group_name, split=SPLIT_UNDEF, icon=ICON_APPLICATION):
+def addGroup(group_id, group_name, split=SPLIT_UNDEF, icon=ICON_APPLICATION, neuron_type = "EXC"):
     if canvas.debug:
         qDebug("PatchCanvas::addGroup(%i, %s, %s, %s)" % (group_id, group_name.encode(), split2str(split), icon2str(icon)))
 
@@ -399,7 +392,12 @@ def addGroup(group_id, group_name, split=SPLIT_UNDEF, icon=ICON_APPLICATION):
     if split == SPLIT_UNDEF and features.handle_group_pos:
         split = canvas.settings.value("CanvasPositions/%s_SPLIT" % group_name, split, type=int)
 
-    group_box = CanvasBox(group_id, group_name, icon)
+    if neuron_type == "EXC":
+        color = "red"
+    else:
+        color = "blue"
+
+    group_box = CanvasBox(group_id, group_name, icon, color)
 
     group_dict = group_dict_t()
     group_dict.group_id = group_id
@@ -416,7 +414,7 @@ def addGroup(group_id, group_name, split=SPLIT_UNDEF, icon=ICON_APPLICATION):
         else:
             group_box.setPos(CanvasGetNewGroupPos())
 
-        group_sbox = CanvasBox(group_id, group_name, icon)
+        group_sbox = CanvasBox(group_id, group_name, icon, color)
         group_sbox.setSplit(True, PORT_MODE_INPUT)
 
         group_dict.widgets[1] = group_sbox
@@ -1380,23 +1378,15 @@ class CanvasLine(QGraphicsLineItem):
         port_type2 = self.item2.getPortType()
         port_gradient = QLinearGradient(0, pos_top, 0, pos_bot)
 
-        if port_type1 == PORT_TYPE_AUDIO_JACK:
+        if port_type1 == PORT_TYPE_INIBITORY:
             port_gradient.setColorAt(pos1, canvas.theme.line_audio_jack_sel if self.m_lineSelected else canvas.theme.line_audio_jack)
-        elif port_type1 == PORT_TYPE_MIDI_JACK:
+        elif port_type1 == PORT_TYPE_EXCITATORY:
             port_gradient.setColorAt(pos1, canvas.theme.line_midi_jack_sel if self.m_lineSelected else canvas.theme.line_midi_jack)
-        elif port_type1 == PORT_TYPE_MIDI_A2J:
-            port_gradient.setColorAt(pos1, canvas.theme.line_midi_a2j_sel if self.m_lineSelected else canvas.theme.line_midi_a2j)
-        elif port_type1 == PORT_TYPE_MIDI_ALSA:
-            port_gradient.setColorAt(pos1, canvas.theme.line_midi_alsa_sel if self.m_lineSelected else canvas.theme.line_midi_alsa)
 
-        if port_type2 == PORT_TYPE_AUDIO_JACK:
+        if port_type2 == PORT_TYPE_INIBITORY:
             port_gradient.setColorAt(pos2, canvas.theme.line_audio_jack_sel if self.m_lineSelected else canvas.theme.line_audio_jack)
-        elif port_type2 == PORT_TYPE_MIDI_JACK:
+        elif port_type2 == PORT_TYPE_EXCITATORY:
             port_gradient.setColorAt(pos2, canvas.theme.line_midi_jack_sel if self.m_lineSelected else canvas.theme.line_midi_jack)
-        elif port_type2 == PORT_TYPE_MIDI_A2J:
-            port_gradient.setColorAt(pos2, canvas.theme.line_midi_a2j_sel if self.m_lineSelected else canvas.theme.line_midi_a2j)
-        elif port_type2 == PORT_TYPE_MIDI_ALSA:
-            port_gradient.setColorAt(pos2, canvas.theme.line_midi_alsa_sel if self.m_lineSelected else canvas.theme.line_midi_alsa)
 
         self.setPen(QPen(port_gradient, 2))
 
@@ -1487,23 +1477,15 @@ class CanvasBezierLine(QGraphicsPathItem):
         port_type2 = self.item2.getPortType()
         port_gradient = QLinearGradient(0, pos_top, 0, pos_bot)
 
-        if port_type1 == PORT_TYPE_AUDIO_JACK:
+        if port_type1 == PORT_TYPE_INIBITORY:
             port_gradient.setColorAt(pos1, canvas.theme.line_audio_jack_sel if self.m_lineSelected else canvas.theme.line_audio_jack)
-        elif port_type1 == PORT_TYPE_MIDI_JACK:
+        elif port_type1 == PORT_TYPE_EXCITATORY:
             port_gradient.setColorAt(pos1, canvas.theme.line_midi_jack_sel if self.m_lineSelected else canvas.theme.line_midi_jack)
-        elif port_type1 == PORT_TYPE_MIDI_A2J:
-            port_gradient.setColorAt(pos1, canvas.theme.line_midi_a2j_sel if self.m_lineSelected else canvas.theme.line_midi_a2j)
-        elif port_type1 == PORT_TYPE_MIDI_ALSA:
-            port_gradient.setColorAt(pos1, canvas.theme.line_midi_alsa_sel if self.m_lineSelected else canvas.theme.line_midi_alsa)
 
-        if port_type2 == PORT_TYPE_AUDIO_JACK:
+        if port_type2 == PORT_TYPE_INIBITORY:
             port_gradient.setColorAt(pos2, canvas.theme.line_audio_jack_sel if self.m_lineSelected else canvas.theme.line_audio_jack)
-        elif port_type2 == PORT_TYPE_MIDI_JACK:
+        elif port_type2 == PORT_TYPE_EXCITATORY:
             port_gradient.setColorAt(pos2, canvas.theme.line_midi_jack_sel if self.m_lineSelected else canvas.theme.line_midi_jack)
-        elif port_type2 == PORT_TYPE_MIDI_A2J:
-            port_gradient.setColorAt(pos2, canvas.theme.line_midi_a2j_sel if self.m_lineSelected else canvas.theme.line_midi_a2j)
-        elif port_type2 == PORT_TYPE_MIDI_ALSA:
-            port_gradient.setColorAt(pos2, canvas.theme.line_midi_alsa_sel if self.m_lineSelected else canvas.theme.line_midi_alsa)
 
         self.setPen(QPen(port_gradient, 2))
 
@@ -1528,14 +1510,10 @@ class CanvasLineMov(QGraphicsLineItem):
         self.p_lineY = self.scenePos().y()
         self.p_width = self.parentItem().getPortWidth()
 
-        if port_type == PORT_TYPE_AUDIO_JACK:
+        if port_type == PORT_TYPE_INIBITORY:
             pen = QPen(canvas.theme.line_audio_jack, 2)
-        elif port_type == PORT_TYPE_MIDI_JACK:
+        elif port_type == PORT_TYPE_EXCITATORY:
             pen = QPen(canvas.theme.line_midi_jack, 2)
-        elif port_type == PORT_TYPE_MIDI_A2J:
-            pen = QPen(canvas.theme.line_midi_a2j, 2)
-        elif port_type == PORT_TYPE_MIDI_ALSA:
-            pen = QPen(canvas.theme.line_midi_alsa, 2)
         else:
             qWarning("PatchCanvas::CanvasLineMov(%s, %s, %s) - invalid port type" % (port_mode2str(port_mode), port_type2str(port_type), parent))
             pen = QPen(Qt.black)
@@ -1585,14 +1563,10 @@ class CanvasBezierLineMov(QGraphicsPathItem):
         self.p_itemY = self.scenePos().y()
         self.p_width = self.parentItem().getPortWidth()
 
-        if port_type == PORT_TYPE_AUDIO_JACK:
+        if port_type == PORT_TYPE_INIBITORY:
             pen = QPen(canvas.theme.line_audio_jack, 2)
-        elif port_type == PORT_TYPE_MIDI_JACK:
+        elif port_type == PORT_TYPE_EXCITATORY:
             pen = QPen(canvas.theme.line_midi_jack, 2)
-        elif port_type == PORT_TYPE_MIDI_A2J:
-            pen = QPen(canvas.theme.line_midi_a2j, 2)
-        elif port_type == PORT_TYPE_MIDI_ALSA:
-            pen = QPen(canvas.theme.line_midi_alsa, 2)
         else:
             qWarning("PatchCanvas::CanvasBezierLineMov(%s, %s, %s) - invalid port type" % (port_mode2str(port_mode), port_type2str(port_type), parent))
             pen = QPen(Qt.black)
@@ -1748,7 +1722,7 @@ class CanvasPort(QGraphicsItem):
                 self.m_hover_item.setSelected(False)
 
             if item:
-                a2j_connection = bool(item.getPortType() == PORT_TYPE_MIDI_JACK and self.m_port_type == PORT_TYPE_MIDI_A2J) or (item.getPortType() == PORT_TYPE_MIDI_A2J and self.m_port_type == PORT_TYPE_MIDI_JACK)
+                a2j_connection = bool(item.getPortType() == PORT_TYPE_EXCITATORY and self.m_port_type == PORT_TYPE_EXCITATORY) or (item.getPortType() == PORT_TYPE_INIBITORY and self.m_port_type == PORT_TYPE_INIBITORY)
 
                 if item.getPortMode() != self.m_port_mode and (item.getPortType() == self.m_port_type or a2j_connection):
                     item.setSelected(True)
@@ -1899,26 +1873,16 @@ class CanvasPort(QGraphicsItem):
             qCritical("PatchCanvas::CanvasPort.paint() - invalid port mode '%s'" % port_mode2str(self.m_port_mode))
             return
 
-        if self.m_port_type == PORT_TYPE_AUDIO_JACK:
+        if self.m_port_type == PORT_TYPE_INIBITORY:
             poly_color = canvas.theme.port_audio_jack_bg_sel if self.isSelected() else canvas.theme.port_audio_jack_bg
             poly_pen = canvas.theme.port_audio_jack_pen_sel  if self.isSelected() else canvas.theme.port_audio_jack_pen
             text_pen = canvas.theme.port_audio_jack_text_sel if self.isSelected() else canvas.theme.port_audio_jack_text
             conn_pen = canvas.theme.port_audio_jack_pen_sel
-        elif self.m_port_type == PORT_TYPE_MIDI_JACK:
+        elif self.m_port_type == PORT_TYPE_EXCITATORY:
             poly_color = canvas.theme.port_midi_jack_bg_sel if self.isSelected() else canvas.theme.port_midi_jack_bg
             poly_pen = canvas.theme.port_midi_jack_pen_sel  if self.isSelected() else canvas.theme.port_midi_jack_pen
             text_pen = canvas.theme.port_midi_jack_text_sel if self.isSelected() else canvas.theme.port_midi_jack_text
             conn_pen = canvas.theme.port_midi_jack_pen_sel
-        elif self.m_port_type == PORT_TYPE_MIDI_A2J:
-            poly_color = canvas.theme.port_midi_a2j_bg_sel if self.isSelected() else canvas.theme.port_midi_a2j_bg
-            poly_pen = canvas.theme.port_midi_a2j_pen_sel  if self.isSelected() else canvas.theme.port_midi_a2j_pen
-            text_pen = canvas.theme.port_midi_a2j_text_sel if self.isSelected() else canvas.theme.port_midi_a2j_text
-            conn_pen = canvas.theme.port_midi_a2j_pen_sel
-        elif self.m_port_type == PORT_TYPE_MIDI_ALSA:
-            poly_color = canvas.theme.port_midi_alsa_bg_sel if self.isSelected() else canvas.theme.port_midi_alsa_bg
-            poly_pen = canvas.theme.port_midi_alsa_pen_sel  if self.isSelected() else canvas.theme.port_midi_alsa_pen
-            text_pen = canvas.theme.port_midi_alsa_text_sel if self.isSelected() else canvas.theme.port_midi_alsa_text
-            conn_pen = canvas.theme.port_midi_alsa_pen_sel
         else:
             qCritical("PatchCanvas::CanvasPort.paint() - invalid port type '%s'" % port_type2str(self.m_port_type))
             return
@@ -1974,9 +1938,9 @@ class cb_line_t(object):
     ]
 
 class CanvasBox(QGraphicsItem):
-    def __init__(self, group_id, group_name, icon, parent=None):
+    def __init__(self, group_id, group_name, icon, color, parent=None):
         QGraphicsItem.__init__(self, parent)
-
+        self.color = color
         # Save Variables, useful for later
         self.m_group_id   = group_id
         self.m_group_name = group_name
@@ -2165,17 +2129,12 @@ class CanvasBox(QGraphicsItem):
                 if size > max_in_width:
                     max_in_width = size
 
-                if port.port_type == PORT_TYPE_AUDIO_JACK and not have_audio_jack_in:
+                if port.port_type == PORT_TYPE_INIBITORY and not have_audio_jack_in:
                     have_audio_jack_in = True
                     max_in_height += canvas.theme.port_spacingT
-                elif port.port_type == PORT_TYPE_MIDI_JACK and not have_midi_jack_in:
+                elif port.port_type == PORT_TYPE_EXCITATORY and not have_midi_jack_in:
                     have_midi_jack_in = True
                     max_in_height += canvas.theme.port_spacingT
-                elif port.port_type == PORT_TYPE_MIDI_A2J and not have_midi_a2j_in:
-                    have_midi_a2j_in = True
-                    max_in_height += canvas.theme.port_spacingT
-                elif port.port_type == PORT_TYPE_MIDI_ALSA and not have_midi_alsa_in:
-                    have_midi_alsa_in = True
                     max_in_height += canvas.theme.port_spacingT
 
             elif port.port_mode == PORT_MODE_OUTPUT:
@@ -2185,17 +2144,11 @@ class CanvasBox(QGraphicsItem):
                 if size > max_out_width:
                     max_out_width = size
 
-                if port.port_type == PORT_TYPE_AUDIO_JACK and not have_audio_jack_out:
+                if port.port_type == PORT_TYPE_INIBITORY and not have_audio_jack_out:
                     have_audio_jack_out = True
                     max_out_height += canvas.theme.port_spacingT
-                elif port.port_type == PORT_TYPE_MIDI_JACK and not have_midi_jack_out:
+                elif port.port_type == PORT_TYPE_EXCITATORY and not have_midi_jack_out:
                     have_midi_jack_out = True
-                    max_out_height += canvas.theme.port_spacingT
-                elif port.port_type == PORT_TYPE_MIDI_A2J and not have_midi_a2j_out:
-                    have_midi_a2j_out = True
-                    max_out_height += canvas.theme.port_spacingT
-                elif port.port_type == PORT_TYPE_MIDI_ALSA and not have_midi_alsa_out:
-                    have_midi_alsa_out = True
                     max_out_height += canvas.theme.port_spacingT
 
         if canvas.theme.port_spacingT == 0:
@@ -2226,9 +2179,9 @@ class CanvasBox(QGraphicsItem):
         last_in_type  = PORT_TYPE_NULL
         last_out_type = PORT_TYPE_NULL
 
-        # Re-position ports, AUDIO_JACK
+        # Re-position ports, PORT_TYPE_INIBITORY
         for port in port_list:
-            if port.port_type == PORT_TYPE_AUDIO_JACK:
+            if port.port_type == PORT_TYPE_INIBITORY:
                 if port.port_mode == PORT_MODE_INPUT:
                     port.widget.setPos(QPointF(1 + canvas.theme.port_offset, last_in_pos))
                     port.widget.setPortWidth(max_in_width)
@@ -2243,32 +2196,9 @@ class CanvasBox(QGraphicsItem):
                     last_out_pos += port_spacing
                     last_out_type = port.port_type
 
-        # Re-position ports, MIDI_JACK
+        # Re-position ports, PORT_TYPE_EXCITATORY
         for port in port_list:
-            if port.port_type == PORT_TYPE_MIDI_JACK:
-                if port.port_mode == PORT_MODE_INPUT:
-                    if last_in_type != PORT_TYPE_NULL and port.port_type != last_in_type:
-                        last_in_pos += canvas.theme.port_spacingT
-
-                    port.widget.setPos(QPointF(1 + canvas.theme.port_offset, last_in_pos))
-                    port.widget.setPortWidth(max_in_width)
-
-                    last_in_pos += port_spacing
-                    last_in_type = port.port_type
-
-                elif port.port_mode == PORT_MODE_OUTPUT:
-                    if last_out_type != PORT_TYPE_NULL and port.port_type != last_out_type:
-                        last_out_pos += canvas.theme.port_spacingT
-
-                    port.widget.setPos(QPointF(self.p_width - max_out_width - canvas.theme.port_offset - 13, last_out_pos))
-                    port.widget.setPortWidth(max_out_width)
-
-                    last_out_pos += port_spacing
-                    last_out_type = port.port_type
-
-        # Re-position ports, MIDI_A2J
-        for port in port_list:
-            if port.port_type == PORT_TYPE_MIDI_A2J:
+            if port.port_type == PORT_TYPE_EXCITATORY:
                 if port.port_mode == PORT_MODE_INPUT:
                     if last_in_type != PORT_TYPE_NULL and port.port_type != last_in_type:
                         last_in_pos += canvas.theme.port_spacingT
@@ -2289,28 +2219,7 @@ class CanvasBox(QGraphicsItem):
                     last_out_pos += port_spacing
                     last_out_type = port.port_type
 
-        # Re-position ports, MIDI_ALSA
-        for port in port_list:
-            if port.port_type == PORT_TYPE_MIDI_ALSA:
-                if port.port_mode == PORT_MODE_INPUT:
-                    if last_in_type != PORT_TYPE_NULL and port.port_type != last_in_type:
-                        last_in_pos += canvas.theme.port_spacingT
 
-                    port.widget.setPos(QPointF(1 + canvas.theme.port_offset, last_in_pos))
-                    port.widget.setPortWidth(max_in_width)
-
-                    last_in_pos += port_spacing
-                    last_in_type = port.port_type
-
-                elif port.port_mode == PORT_MODE_OUTPUT:
-                    if last_out_type != PORT_TYPE_NULL and port.port_type != last_out_type:
-                        last_out_pos += canvas.theme.port_spacingT
-
-                    port.widget.setPos(QPointF(self.p_width - max_out_width - canvas.theme.port_offset - 13, last_out_pos))
-                    port.widget.setPortWidth(max_out_width)
-
-                    last_out_pos += port_spacing
-                    last_out_type = port.port_type
 
         self.repaintLines(True)
         self.update()
@@ -2361,6 +2270,7 @@ class CanvasBox(QGraphicsItem):
         menu.addMenu(discMenu)
         act_x_disc_all = menu.addAction("Disconnect &All")
         act_x_sep1 = menu.addSeparator()
+        act_x_params = menu.addAction("&Parameters")
         act_x_info = menu.addAction("&Info")
         act_x_rename = menu.addAction("&Rename")
         act_x_sep2 = menu.addSeparator()
@@ -2406,7 +2316,8 @@ class CanvasBox(QGraphicsItem):
                 canvas.callback(ACTION_GROUP_JOIN, self.m_group_id, 0, "")
             else:
                 canvas.callback(ACTION_GROUP_SPLIT, self.m_group_id, 0, "")
-
+        elif act_selected == act_x_params:
+            canvas.callback(ACTION_NEURON_EDIT, self.m_group_id, 0, "")
         event.accept()
 
     def mousePressEvent(self, event):
@@ -2462,13 +2373,10 @@ class CanvasBox(QGraphicsItem):
         else:
             painter.setPen(canvas.theme.box_pen)
 
-        if canvas.theme.box_bg_type == Theme.THEME_BG_GRADIENT:
-            box_gradient = QLinearGradient(0, 0, 0, self.p_height)
-            box_gradient.setColorAt(0, canvas.theme.box_bg_1)
-            box_gradient.setColorAt(1, canvas.theme.box_bg_2)
-            painter.setBrush(box_gradient)
+        if self.color == "red":
+            painter.setBrush(canvas.theme.red_bg)
         else:
-            painter.setBrush(canvas.theme.box_bg_1)
+            painter.setBrush(canvas.theme.blue_bg)
 
         painter.drawRect(0, 0, self.p_width, self.p_height)
 
@@ -2605,14 +2513,10 @@ class CanvasPortGlow(QGraphicsDropShadowEffect):
         self.setBlurRadius(12)
         self.setOffset(0, 0)
 
-        if port_type == PORT_TYPE_AUDIO_JACK:
+        if port_type == PORT_TYPE_INIBITORY:
             self.setColor(canvas.theme.line_audio_jack_glow)
-        elif port_type == PORT_TYPE_MIDI_JACK:
+        elif port_type == PORT_TYPE_EXCITATORY:
             self.setColor(canvas.theme.line_midi_jack_glow)
-        elif port_type == PORT_TYPE_MIDI_A2J:
-            self.setColor(canvas.theme.line_midi_a2j_glow)
-        elif port_type == PORT_TYPE_MIDI_ALSA:
-            self.setColor(canvas.theme.line_midi_alsa_glow)
 
 # ------------------------------------------------------------------------------
 # canvasboxshadow.cpp

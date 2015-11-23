@@ -50,11 +50,13 @@ class Theme(object):
         if idx == self.THEME_MODERN_DARK:
             # Canvas
             self.canvas_bg = QColor(0, 0, 0)
-
+            self.red_bg = QColor(255, 0, 0)
+            self.blue_bg = QColor(0, 0, 255)
+            
             # Boxes
             self.box_pen = QPen(QColor(76, 77, 78), 1, Qt.SolidLine)
             self.box_pen_sel = QPen(QColor(206, 207, 208), 1, Qt.DashLine)
-            self.box_bg_1 = QColor(32, 34, 35)
+            self.box_bg_1 = QColor(255, 0, 0)
             self.box_bg_2 = QColor(43, 47, 48)
             self.box_shadow = QColor(89, 89, 89, 180)
             self.box_header_pixmap  = None
@@ -384,6 +386,8 @@ class Theme(object):
             self.box_pen_sel = QPen(QColor(189, 122, 214), 1, Qt.DashLine)
             self.box_bg_1 = QColor(46, 46, 46)
             self.box_bg_2 = QColor(23, 23, 23)
+            self.red_bg = QColor(255, 0, 0)
+            self.blue_bg = QColor(0, 0, 255)
             self.box_shadow = QColor(89, 89, 89, 180)
             self.box_header_pixmap  = QPixmap(":/bitmaps/canvas/frame_node_header.png")
             self.box_header_height  = 22

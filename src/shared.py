@@ -290,10 +290,13 @@ def setIcons(self_, modes):
         gGui.ui.act_transport_stop.setIcon(getIcon("media-playback-stop"))
         gGui.ui.act_transport_backwards.setIcon(getIcon("media-seek-backward"))
         gGui.ui.act_transport_forwards.setIcon(getIcon("media-seek-forward"))
-        gGui.ui.b_transport_play.setIcon(getIcon("media-playback-start"))
         gGui.ui.b_transport_stop.setIcon(getIcon("media-playback-stop"))
         gGui.ui.b_transport_backwards.setIcon(getIcon("media-seek-backward"))
         gGui.ui.b_transport_forwards.setIcon(getIcon("media-seek-forward"))
+
+    if "neurons" in modes:
+        gGui.ui.act_exc_neuron_add.setIcon(getIcon("neuron_add_exec"))
+#        gGui.ui.act_inh_neuron_add.setIcon(getIcon("neuron_add_inh"))
 
     if "misc" in modes:
         gGui.ui.act_quit.setIcon(getIcon("application-exit"))
